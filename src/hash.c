@@ -3,7 +3,47 @@
 
 #include "hash.h"
 
+#define CAPACIDAD_MIN 3
 #define FACTOR_CARGA_MAXIMO 0.7
+
+typedef struct nodo
+{
+	char *clave;
+	void *elemento;
+	struct nodo **siguiente;
+} nodo_t;
+
+struct hash
+{
+	struct nodo **vector;
+	size_t cantidad;
+	size_t capacidad;
+};
+
+char *copiar_clave(const char *clave)
+{
+	if (!clave)
+		return NULL;
+	char *copia = malloc(strlen(clave) + 1);
+	if (!copia)
+		return NULL;
+	strcpy(copia, clave);
+
+	return copia;
+}
+
+nodo_t *nodo_crear(const char *clave, void *elemento)
+{
+	if (!clave)
+		return NULL;
+	nodo_t *nodo = malloc(sizeof(nodo_t));
+	if (!nodo)
+		return NULL;
+	nodo->clave = copiar_clave(clave);
+	nodo->elemento = elemento;
+
+	return nodo;
+}
 
 hash_t *hash_crear(size_t capacidad)
 {
