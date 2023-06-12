@@ -48,7 +48,7 @@ nodo_t *_nodo_crear(const char *clave, void *elemento)
 		return NULL;
 	}
 	nodo->elemento = elemento;
-
+	nodo->siguiente = NULL;
 	return nodo;
 }
 
@@ -58,35 +58,6 @@ void _nodo_destruir(nodo_t *nodo)
 		return;
 	free(nodo->clave);
 	free(nodo);
-}
-
-hash_t *_rehashear(hash_t *hash)
-{
-	if (!hash)
-		return NULL;
-
-	hash_t *nuevo_hash = hash_crear(hash->capacidad * 2);
-	if (!nuevo_hash)
-		return NULL;
-
-	for (size_t i = 0; i < hash->capacidad; i++)
-	{
-		nodo_t *actual = hash->vector[i];
-		while (actual)
-		{
-			void *anterior = NULL;
-			hash_insertar(nuevo_hash, actual->clave, actual->elemento, &anterior);
-			actual = actual->siguiente;
-		}
-	}
-
-	hash_t aux = *hash;
-	*hash = *nuevo_hash;
-	*nuevo_hash = aux;
-
-	hash_destruir(nuevo_hash);
-
-	return hash;
 }
 
 ulong _hashear(const char *clave)
@@ -100,6 +71,37 @@ ulong _hashear(const char *clave)
 	}
 
 	return hashValue;
+}
+
+hash_t *_rehashear(hash_t *hash)
+{
+	if (!hash)
+		return NULL;
+
+	hash_t *nuevo_hash = hash_crear((hash->capacidad) * 2);
+
+	if (!nuevo_hash)
+		return NULL;
+
+	for (size_t i = 0; i < hash->capacidad; i++)
+	{
+		nodo_t *actual = hash->vector[i];
+		while (actual)
+		{
+			void *anterior = NULL;
+			if (!hash_insertar(nuevo_hash, actual->clave, actual->elemento, &anterior))
+				return NULL;
+			actual = actual->siguiente;
+		}
+	}
+
+	hash_t aux = *hash;
+	*hash = *nuevo_hash;
+	*nuevo_hash = aux;
+
+	hash_destruir(nuevo_hash);
+
+	return hash;
 }
 
 hash_t *hash_crear(size_t capacidad)
@@ -127,7 +129,6 @@ hash_t *hash_insertar(hash_t *hash, const char *clave, void *elemento,
 {
 	if (!hash || !clave)
 		return NULL;
-	size_t posicion = _hashear(clave) % hash->capacidad;
 
 	float carga = (float)hash->cantidad / (float)hash->capacidad;
 
@@ -139,6 +140,8 @@ hash_t *hash_insertar(hash_t *hash, const char *clave, void *elemento,
 			return NULL;
 		}
 	}
+
+	size_t posicion = _hashear(clave) % hash->capacidad;
 
 	if (hash->vector[posicion] == NULL)
 	{
