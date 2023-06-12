@@ -8,15 +8,13 @@
 
 typedef unsigned long ulong;
 
-typedef struct nodo
-{
+typedef struct nodo {
 	char *clave;
 	void *elemento;
 	struct nodo *siguiente;
 } nodo_t;
 
-struct hash
-{
+struct hash {
 	nodo_t **vector;
 	size_t cantidad;
 	size_t capacidad;
@@ -42,8 +40,7 @@ nodo_t *_nodo_crear(const char *clave, void *elemento)
 	if (!nodo)
 		return NULL;
 	nodo->clave = _copiar_clave(clave);
-	if (!nodo->clave)
-	{
+	if (!nodo->clave) {
 		free(nodo);
 		return NULL;
 	}
@@ -65,8 +62,7 @@ ulong _hashear(const char *clave)
 	ulong hashValue = 5381;
 	int c;
 
-	while ((c = *clave++) != '\0')
-	{
+	while ((c = *clave++) != '\0') {
 		hashValue = ((hashValue << 5) + hashValue) + (ulong)c;
 	}
 
@@ -83,13 +79,12 @@ hash_t *_rehashear(hash_t *hash)
 	if (!nuevo_hash)
 		return NULL;
 
-	for (size_t i = 0; i < hash->capacidad; i++)
-	{
+	for (size_t i = 0; i < hash->capacidad; i++) {
 		nodo_t *actual = hash->vector[i];
-		while (actual)
-		{
+		while (actual) {
 			void *anterior = NULL;
-			if (!hash_insertar(nuevo_hash, actual->clave, actual->elemento, &anterior))
+			if (!hash_insertar(nuevo_hash, actual->clave,
+					   actual->elemento, &anterior))
 				return NULL;
 			actual = actual->siguiente;
 		}
@@ -106,7 +101,6 @@ hash_t *_rehashear(hash_t *hash)
 
 hash_t *hash_crear(size_t capacidad)
 {
-
 	if (capacidad < CAPACIDAD_MIN)
 		capacidad = CAPACIDAD_MIN;
 	hash_t *hash = calloc(1, sizeof(hash_t));
@@ -114,8 +108,7 @@ hash_t *hash_crear(size_t capacidad)
 		return NULL;
 
 	hash->vector = calloc(capacidad, sizeof(nodo_t *));
-	if (!hash->vector)
-	{
+	if (!hash->vector) {
 		free(hash);
 		return NULL;
 	}
@@ -132,10 +125,8 @@ hash_t *hash_insertar(hash_t *hash, const char *clave, void *elemento,
 
 	float carga = (float)hash->cantidad / (float)hash->capacidad;
 
-	if (carga > FACTOR_CARGA_MAXIMO)
-	{
-		if (!_rehashear(hash))
-		{
+	if (carga > FACTOR_CARGA_MAXIMO) {
+		if (!_rehashear(hash)) {
 			hash_destruir(hash);
 			return NULL;
 		}
@@ -143,8 +134,7 @@ hash_t *hash_insertar(hash_t *hash, const char *clave, void *elemento,
 
 	size_t posicion = _hashear(clave) % hash->capacidad;
 
-	if (hash->vector[posicion] == NULL)
-	{
+	if (hash->vector[posicion] == NULL) {
 		nodo_t *nodo = _nodo_crear(clave, elemento);
 		if (!nodo)
 			return NULL;
@@ -157,10 +147,8 @@ hash_t *hash_insertar(hash_t *hash, const char *clave, void *elemento,
 	}
 
 	nodo_t *actual = hash->vector[posicion];
-	while (actual)
-	{
-		if (strcmp(actual->clave, clave) == 0)
-		{
+	while (actual) {
+		if (strcmp(actual->clave, clave) == 0) {
 			void *elemento_anterior = actual->elemento;
 			actual->elemento = elemento;
 			if (anterior)
@@ -190,10 +178,8 @@ void *hash_quitar(hash_t *hash, const char *clave)
 	nodo_t *actual = hash->vector[posicion];
 	nodo_t *anterior = NULL;
 
-	while (actual)
-	{
-		if (strcmp(actual->clave, clave) == 0)
-		{
+	while (actual) {
+		if (strcmp(actual->clave, clave) == 0) {
 			if (anterior)
 				anterior->siguiente = actual->siguiente;
 			else
@@ -221,10 +207,8 @@ void *hash_obtener(hash_t *hash, const char *clave)
 	size_t posicion = _hashear(clave) % hash->capacidad;
 	nodo_t *actual = hash->vector[posicion];
 
-	while (actual)
-	{
-		if (actual->clave && strcmp(actual->clave, clave) == 0)
-		{
+	while (actual) {
+		if (actual->clave && strcmp(actual->clave, clave) == 0) {
 			return actual->elemento;
 		}
 		actual = actual->siguiente;
@@ -240,8 +224,7 @@ bool hash_contiene(hash_t *hash, const char *clave)
 	size_t posicion = _hashear(clave) % hash->capacidad;
 	nodo_t *actual = hash->vector[posicion];
 
-	while (actual)
-	{
+	while (actual) {
 		if (actual->clave && strcmp(actual->clave, clave) == 0)
 			return true;
 		actual = actual->siguiente;
@@ -267,11 +250,9 @@ void hash_destruir_todo(hash_t *hash, void (*destructor)(void *))
 	if (!hash)
 		return;
 
-	for (size_t i = 0; i < hash->capacidad; i++)
-	{
+	for (size_t i = 0; i < hash->capacidad; i++) {
 		nodo_t *actual = hash->vector[i];
-		while (actual)
-		{
+		while (actual) {
 			nodo_t *siguiente = actual->siguiente;
 			if (destructor)
 				destructor(actual->elemento);
@@ -291,14 +272,11 @@ size_t hash_con_cada_clave(hash_t *hash,
 	size_t claves_iteradas = 0;
 	if (!hash || !f)
 		return claves_iteradas;
-	for (size_t i = 0; i < hash->capacidad; i++)
-	{
+	for (size_t i = 0; i < hash->capacidad; i++) {
 		nodo_t *actual = hash->vector[i];
 
-		while (actual)
-		{
-			if (!f(actual->clave, actual->elemento, aux))
-			{
+		while (actual) {
+			if (!f(actual->clave, actual->elemento, aux)) {
 				claves_iteradas++;
 				return claves_iteradas;
 			}
